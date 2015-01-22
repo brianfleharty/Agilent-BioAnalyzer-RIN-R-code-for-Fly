@@ -1,6 +1,5 @@
 #set the working directory
-
-dir<- "H:\\B_RIN"
+dir<- "H:\\B_RIN\\emd"
 setwd(dir)
 myfiles<-list.files()
 which(substr(myfiles,69,79)=="Results.csv")
@@ -28,18 +27,6 @@ str2<-"_S"
 str3<-paste(str1,str2,sep="")
 samp_num_chip<-length(grep(str3,myfiles))
 
-targets <- read.delim(results[i], sep=",",header=F,skip=14,as.is=T)
-targets[1:5,]
-which(targets[,1]=="Sample Name")
-length(which(targets[,1]=="Sample Name"))
-samples<-as.character(targets[which(targets[,1]=="Sample Name"),2])
-tbl<-which(targets[,1]=="Overall Results:")
-length(which(targets[,1]=="Overall Results:"))
-
-tbl[1]
-tbl[1]
-colnms<-as.character(targets[(tbl[1]+1):(tbl[1]+4),1])
-
 #mod sample numb
 str1<-substr(targets2[1,2],1,67)
 str4<-"_Sample"
@@ -61,15 +48,29 @@ samples1
 write.table(samples1,file=paste(dir,"\\ba_lane.txt",sep=""), sep="\t",col.names=NA)
 
 
+
+
+
+
+
+
+
+
+
+
 #RIN Calculator#######refined peakfinder####################
+
+
 
 #read bioanalyzer data into a matrix called dta
 #since the total RNA and mRNA assays run differently
 #skip more lines for the total RNA assay
 
+
+
 ramp <- colorRamp(c("darkmagenta","white"))
 elec <- read.delim("ba_lane.txt", sep="\t",header=T,as.is=T)
-qc.mat <- matrix(NA, ncol=2, nrow=nrow(elec))
+qc.mat <- matrix(NA, ncol=1, nrow=nrow(elec))
 
 dta <- matrix(NA, nrow=1060, ncol=nrow(elec))
 for(i in 1:nrow(elec))
@@ -79,11 +80,12 @@ dta[,i] <- x[,2]
 }
 time<- x[,1]
 
+
 #plot ladder and define peak threshold in HD
 
 par(mfrow=c(3,4))
-#for(samples in 1:4)
-for(samples in 1:nrow(elec))
+for(samples in 1:length(samples1))
+#for(samples in 1:nrow(elec))
 {
 #which(dta[,lad] > 5)
 #draw some segments and store max fluor in max.peaks matrix
@@ -93,6 +95,8 @@ ti2<-65
 p.row<-length(dta[which(time==ti1):which(time==ti1+1),lad])*(ti2-ti1+1)
 peaks <- matrix(NA, nrow=p.row, ncol=1)
 max.peaks <- matrix(NA, nrow=length(seq(ti1,ti2,.05)), ncol=1)
+
+
 
 for (i in 1:length(seq(ti1,ti2,.05)))
 {
@@ -108,51 +112,21 @@ max.peaks[i]<- max(dta[which(time==x0):which(time==x),lad])
 }    
 
 #human or mouse
-cent<-max(max.peaks)*.3
+cent<-max(max.peaks)*.6
 
 #flatworm
 #cent<-max(max.peaks)*.05
 
-mat3 <- matrix("NA", ncol=length(colnms), nrow=length(samples1))
-for(i in 1:length(results)) 
-{
-targets <- read.delim(results[i], sep=",",header=F,skip=14,as.is=T)
-targets[1:5,]
-which(targets[,1]=="Sample Name")
-length(which(targets[,1]=="Sample Name"))
-samples3<-as.character(targets[which(targets[,1]=="Sample Name"),2]) 
-mat3[1:length(samples3),i]<-samples3
-}
-mat3
-which(mat3!="NA")[i]
+plot(time,dta[,lad],type="h",col="dodgerblue",xlab="seconds",ylab="Fluorescence Units",xlim=c(17,75),ylim=c(0,(max(max.peaks)*1.2)),main=elec[lad,1])
+abline(h=cent,col="grey")
 
-#for (n in 1:length(mat3[which(mat3!="NA")]))
-
-length(mat3[which(mat3!="NA")])
-plot(time,dta[,lad],type="h",col="bisque4",xlab="seconds",ylab="Fluorescence Units",xlim=c(17,75),ylim=c(0,(max(max.peaks)*1.2)),main=mat3[which(mat3!="NA")[samples]])
-abline(h=cent,col="grey",lty="dashed")
 
 #define the middle of the segments
 max.avg<-seq(ti1+.025,ti2+.025,.05)
 
 #plot the maximum value of each segment
 max.peaks
-lines(max.avg,max.peaks,type="n",col="bisque3",pch=20)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+lines(max.avg,max.peaks,type="b",col="deepskyblue")
 #lines(max.avg,min.peaks,type="b",col="blue")
 
 #find time associated with peaks > 5 fu and fill seconds matrix with them
@@ -171,18 +145,12 @@ c(gt35,lt55)[tfr]
 max.avg[sizes][c(gt35,lt55)[tfr]]
 max.peaks[sizes][c(gt35,lt55)[tfr]]
 
-points(max.avg[sizes+1][c(gt35,lt55)[tfr]],max.peaks[sizes+1][c(gt35,lt55)[tfr]],col="springgreen3",pch=20)
-points(max.avg[sizes-1][c(gt35,lt55)[tfr]],max.peaks[sizes-1][c(gt35,lt55)[tfr]],col="springgreen3",pch=20)
-points(max.avg[sizes][c(gt35,lt55)[tfr]],max.peaks[sizes][c(gt35,lt55)[tfr]],col="tomato3",pch=20)
 
 
 
-
-
-
-
-
-
+points(max.avg[sizes+1][c(gt35,lt55)[tfr]],max.peaks[sizes+1][c(gt35,lt55)[tfr]],col="lawngreen",pch=19)
+points(max.avg[sizes-1][c(gt35,lt55)[tfr]],max.peaks[sizes-1][c(gt35,lt55)[tfr]],col="lawngreen",pch=19)
+points(max.avg[sizes][c(gt35,lt55)[tfr]],max.peaks[sizes][c(gt35,lt55)[tfr]],col="deeppink3",pch=19)
 
 #colnms2<-c("max.avg[sizes]","max.peaks[sizes]","max.avg[sizes+1]","max.peaks[sizes+1]","max.avg[sizes-1]")
 max.avg[sizes]
@@ -213,22 +181,26 @@ v2<-t2
 v3<-t3
 v4<-t4
 
-abline(v=v1,col="grey",lty="dashed")
-abline(v=v2,col="grey",lty="dashed")
 
-abline(v=v3,col="grey",lty="dashed")
-abline(v=v4,col="grey",lty="dashed")
+abline(v=v1)
+abline(v=v2)
+
+abline(v=v3)
+abline(v=v4)
 
 #time[area[which(area[,1]<cent),1][1]==dta[,lad]]
 #time[area[which(area[,3]<cent),3][1]==dta[,lad]]
 #time[area[which(area[,1]<cent),1][2]==dta[,lad]]
 #time[area[which(area[,3]<cent),3][2]==dta[,lad]]
+
 #abline(v=time[area[which(area[,1]<cent),1][1]==dta[,lad]])
 #abline(v=time[area[which(area[,3]<cent),3][1]==dta[,lad]])
 #abline(v=time[area[which(area[,1]<cent),1][2]==dta[,lad]])
 #abline(v=time[area[which(area[,3]<cent),3][2]==dta[,lad]])
+
 #abline(h=area[which(area[,3]<cent),3][1])
 #abline(h=area[which(area[,3]<cent),3][2]+3)
+
 
 s18a<-round(t1,digits=1)
 s18b<-round(t3,digits=1)
@@ -246,68 +218,44 @@ etb<-which(time==s18b)
 tea<-which(time==s28a)
 teb<-which(time==s28b)
 
+
+
+
 #dta[eta:etb,lad]
 #dta[tea:teb,lad]
+
 s18<-sum(dta[eta:etb,lad])
 s28<-sum(dta[tea:teb,lad])
+
 s28/s18
-qc.mat[samples,2]<-  round((-1*exp((s28/s18)*-1.5)+1)*10,digits=2)
-qc.mat[samples,1]<-  mat3[which(mat3!="NA")[samples]]
-text(60,cent+1*cent,c(format(qc.mat[samples,2],digits=2),"\n\nB-RIN"))
-Sys.sleep(1)
+qc.mat[samples]<-  (-1*exp((s28/s18)*-1)+1)*10
+text(60,cent*.75,c(format(qc.mat[samples],digits=2),"\n\nB-RIN"))
 }
+
 qc.mat
 ###end of ratio calc
 ###
 ###
 #barplot(qc.mat,beside=T,ylim=c(0,11))
-write.table(qc.mat,file=paste(dir,"\\B-RIN_dat.txt",sep=""), sep="\t",col.names=NA)
 
-
-
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-
-
-
-
-
-
-myfiles<-list.files()
-which(substr(myfiles[1:100],69,79)=="Results.csv")
-results<-myfiles[which(substr(myfiles[1:100],69,79)=="Results.csv")]
-n <- which(substr(myfiles[1:100],69,79)=="Results.csv")
-targets <- read.delim(myfiles[n[1]], sep=",",header=F,skip=14,as.is=T)
-targets[1:5,]
+#set the working directory
+#results <- read.delim("results-files.txt", sep=",",header=F,skip=0,as.is=T)
+#targets <- read.delim(results[1,], sep=",",header=F,skip=14,as.is=T)
+#targets[1:5,]
 tbl<-which(targets[,1]=="Overall Results:")
 which(targets[,1]=="Sample Name")
 length(which(targets[,1]=="Sample Name"))
 samples<-as.character(targets[which(targets[,1]=="Sample Name"),2])
+
+
 #read in the targets file                               
 colnms<-as.character(targets[(tbl[1]+1):(tbl[1]+4),1])
-
-
-
-mat1 <- matrix(NA, ncol=length(colnms), nrow=nrow(qc.mat))
+mat1 <- matrix(NA, ncol=length(colnms), nrow=length(samples)*length(results))
 colnames(mat1)<-colnms
-rownames(mat1)<-qc.mat[,1]
-#read.delim("samples02.txt", sep="\t",header=T,as.is=T)
-for(i in 1:length(results))
+rownames(mat1)<-rep(samples,length(results))
+
+
+for(i in 1:length(results)) 
 {
 targets <- read.delim(results[i], sep=",",header=F,skip=14,as.is=T)
 targets[1:5,]
@@ -316,28 +264,24 @@ length(which(targets[,1]=="Sample Name"))
 samples<-as.character(targets[which(targets[,1]=="Sample Name"),2])
 tbl<-which(targets[,1]=="Overall Results:")
 length(which(targets[,1]=="Overall Results:"))
+
 tbl[1]
 tbl[1]
-#colnms<-as.character(targets[(tbl[1]+1):(tbl[1]+4),1])
-
-
-
-
+colnms<-as.character(targets[(tbl[1]+1):(tbl[1]+4),1])
 
 for (j in 1:length(samples))
 {
-mat1[((12*(i-1))+j),]<-as.matrix(targets[(tbl[j]+1):(tbl[j]+4),2])
+mat1[((length(samples)*(i-1))+j),]<-as.matrix(targets[(tbl[j]+1):(tbl[j]+4),2])
 }
 }
 mat1
-qc.mat
-
-
-
 
 
 cbind(mat1,qc.mat)
-colnames(qc.mat)<-c("samples_name","B-RIN")
-write.table(mat1,file=paste(dir,"\\conc.txt",sep=""), sep="\t",col.names=NA)
-write.table(cbind(mat1,qc.mat),file=paste(dir,"\\conc.txt",sep=""), sep="\t",col.names=NA)
-##
+colnames(qc.mat)<-"B-RIN"
+
+write.table(cbind(mat1,qc.mat),file=paste(dir,"\\RIN_VS_B-RIN.txt",sep=""), sep="\t",col.names=NA)
+
+
+###
+
